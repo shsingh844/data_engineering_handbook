@@ -1,20 +1,20 @@
--- -- DROP TABLE players;
--- --CREATE TYPE scoring_class AS ENUM ('star', 'good', 'avg', 'bad');
--- -- CREATE TABLE players (
--- --      player_name TEXT,
--- --      height TEXT,
--- --      college TEXT,
--- --      country TEXT,
--- --      draft_year TEXT,
--- --      draft_round TEXT,
--- --      draft_number TEXT,
--- --      seasons season_stats[],
--- --      scoring_class scoring_class,
--- --      years_since_last_active INTEGER,
--- --      is_active BOOLEAN,
--- --      current_season INTEGER,
--- --      PRIMARY KEY (player_name, current_season)
--- --  );
+-- DROP TABLE players;
+-- CREATE TYPE scoring_class AS ENUM ('star', 'good', 'avg', 'bad');
+-- CREATE TABLE players (
+--      player_name TEXT,
+--      height TEXT,
+--      college TEXT,
+--      country TEXT,
+--      draft_year TEXT,
+--      draft_round TEXT,
+--      draft_number TEXT,
+--      seasons season_stats[],
+--      scoring_class scoring_class,
+--      years_since_last_active INTEGER,
+--      is_active BOOLEAN,
+--      current_season INTEGER,
+--      PRIMARY KEY (player_name, current_season)
+--  );
 
 -- INSERT INTO players
 -- WITH years AS (
@@ -89,19 +89,28 @@
 -- JOIN static s
 --     ON w.player_name = s.player_name;
 
--- create table with SCDs
--- CREATE TABLE players_scd (
--- 	player_name TEXT,
--- 	scoring_class scoring_class,
--- 	is_active BOOLEAN,
--- 	current_season INTEGER,
--- 	start_season INTEGER,
--- 	end_season INTEGER,
--- 	PRIMARY KEY(player_name, start_season)
--- );
+-- select * from players;
+
+
+
+----------------------------------------------------------------------------------------------------------------
 
 -- creating SCD table that track changes in multiple columns
 -- using window function LAG to see the dimension before
+-- drop table players_scd;
+
+-- create table with SCDs
+-- CREATE TABLE players_scd (
+-- 	player_name TEXT,
+--  streak_identifier INTEGER,
+-- 	scoring_class scoring_class,
+-- 	is_active BOOLEAN,
+-- 	start_season INTEGER,
+-- 	end_season INTEGER,
+-- 	current_season INTEGER,
+-- 	PRIMARY KEY(player_name, start_season)
+-- );
+
 -- creating CTE
 INSERT INTO players_scd
 WITH with_previous AS (
@@ -113,12 +122,23 @@ SELECT
 	LAG(scoring_class, 1) OVER (PARTITION BY player_name ORDER BY current_season) AS previous_scoring_class,
 	LAG(is_active, 1) OVER (PARTITION BY player_name ORDER BY current_season) AS previous_is_active	
 FROM players
+-- further filtering, just so we can use 2022 for incremental build
 WHERE current_season <= 2021
 ),
 
 -- calculate the streak of a player, like how long were they
 -- in a current dimension
-
+-- create an indicator whether or not dimension is changed (v0)
+-- SELECT *, 
+-- 			CASE 
+-- 				WHEN scoring_class <> previous_scoring_class THEN 1 
+-- 				ELSE 0 
+-- 			END AS scoring_class_change_indicator,
+-- 			CASE 
+-- 				WHEN is_active <> previous_is_active THEN 1 
+-- 				ELSE 0 
+-- 			END AS is_active_change_indicator
+-- FROM with_previous;
 
 -- club 2 indicators into 1, just tracking change in scoring_class or is_active
 with_indicators AS (
@@ -140,8 +160,7 @@ FROM with_indicators
 --
 -- ps: hard coding 2021 here to build incrementally for next season
 	SELECT player_name,
--- commenting out "streak_identifier from schema as its not in original players_scd table"
-		   -- streak_identifier,
+		   streak_identifier,
 		   scoring_class,
 		   is_active,
 		   MIN(current_season) as start_season,
@@ -156,17 +175,9 @@ SELECT * FROM players_scd;
 --Limitations of query above:
 -- expensive in terms of time as using window ffunctions 
 -- LAG, SUM, MIN, MAX, GROUP BY
--- create an indicator whether or not dimension is changed (v0)
--- SELECT *, 
--- 			CASE 
--- 				WHEN scoring_class <> previous_scoring_class THEN 1 
--- 				ELSE 0 
--- 			END AS scoring_class_change_indicator,
--- 			CASE 
--- 				WHEN is_active <> previous_is_active THEN 1 
--- 				ELSE 0 
--- 			END AS is_active_change_indicator
--- FROM with_previous;
+-- prone to out of memory issue, skew
+
+-- incremenetal scd query in next file "DDM_lab2_incrementalSCD.sql"
 
 
 

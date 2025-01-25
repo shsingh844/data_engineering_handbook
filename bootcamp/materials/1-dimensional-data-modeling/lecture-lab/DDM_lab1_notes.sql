@@ -39,14 +39,14 @@
 -- 	 )
 	 
 -- SELECT
--- using coalesce to add non-null value(s) since these attributes are non changing
-	-- COALESCE(t.player_name, y.player_name) AS player_name,
-	-- COALESCE(t.height, y.height) AS height,
-	-- COALESCE(t.college, y.college) AS college,
-	-- COALESCE(t.country, y.country) AS country,
-	-- COALESCE(t.draft_year, y.draft_year) AS draft_year,
-	-- COALESCE(t.draft_round, y.draft_round) AS draft_round,
-	-- COALESCE(t.draft_number, y.draft_number) AS draft_number,
+-- -- using coalesce to add non-null value(s) since these attributes are non changing
+-- 	COALESCE(t.player_name, y.player_name) AS player_name,
+-- 	COALESCE(t.height, y.height) AS height,
+-- 	COALESCE(t.college, y.college) AS college,
+-- 	COALESCE(t.country, y.country) AS country,
+-- 	COALESCE(t.draft_year, y.draft_year) AS draft_year,
+-- 	COALESCE(t.draft_round, y.draft_round) AS draft_round,
+-- 	COALESCE(t.draft_number, y.draft_number) AS draft_number,
 -- for temporal deminsions, we do case by case
 -- case 1: if yesterday value is NULL, then show season stats as an array of
 -- attributes season, gp, pts, reb, ast from today
@@ -54,19 +54,21 @@
 -- with formation of TYPE season_stats
 -- case 2: Else, we concat the values in t and y season_stats array
 -- case 3: if t.season value is NULL ie a retired player who played yesterday but not today
-	-- CASE WHEN y.season_stats IS NULL 
-	-- 	THEN ARRAY[ROW(
-	-- 				t.season, t.gp, t.pts, t.reb, t.ast
-	-- 	)::season_stats]
-	-- 	WHEN t.season IS NOT NULL THEN y.season_stats || ARRAY[ROW(
-	-- 				t.season, t.gp, t.pts, t.reb, t.ast
-	-- 	)::season_stats]
-	-- 	ELSE y.season_stats
-	-- 	END as season_stats,
-	-- 	COALESCE(t.season, y.current_season + 1) AS current_season
+-- 	CASE WHEN y.season_stats IS NULL 
+-- 		THEN ARRAY[ROW(
+-- 					t.season, t.gp, t.pts, t.reb, t.ast
+-- 		)::season_stats]
+-- 		WHEN t.season IS NOT NULL THEN y.season_stats || ARRAY[ROW(
+-- 					t.season, t.gp, t.pts, t.reb, t.ast
+-- 		)::season_stats]
+-- 		ELSE y.season_stats
+-- 		END as season_stats,
+-- 		COALESCE(t.season, y.current_season + 1) AS current_season
 
-	-- FROM today t FULL OUTER JOIN yesterday y
-	-- ON t.player_name = y.player_name
+-- 	FROM today t FULL OUTER JOIN yesterday y
+-- 	ON t.player_name = y.player_name
+
+-- SELECT * from players;
 
 -- use case: flattened out table giving insights into a player's stats
 -- SELECT * FROM players WHERE current_season = 2001 AND player_name = 'Michael Jordan'
@@ -106,10 +108,12 @@
 -- starting fresh to edit the table "players" for analytical queries
 -- DROP TABLE players;
 
+-----------------------------------------------------------------------------------------------------------------------------
+
 -- creating "scoring_class" to rate a player based on attribute "pts"
 -- "years_since_last_played" dimension will add insight about gap
 -- CREATE TYPE scoring_class AS ENUM ('star', 'good', 'avg', 'bad');
-
+-- drop table players;
 -- CREATE TABLE players (
 -- 		player_name TEXT,
 -- 		height TEXT,
